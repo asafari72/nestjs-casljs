@@ -1,0 +1,11 @@
+User CRUD
+
+GET /user
+GET /user/id
+Post /user
+Patch /user/id
+Delete /user/id
+
+Access:
+- If isAdmin: create, read, update, delete
+- If NOT admin:  read
