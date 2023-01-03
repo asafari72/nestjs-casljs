@@ -1,4 +1,4 @@
-import { InferSubjects } from '@casl/ability';
+import { Ability, AbilityClass, InferSubjects } from '@casl/ability';
 import {
   AbilityBuilder,
   createMongoAbility,
@@ -17,24 +17,26 @@ export enum Action {
 
 // export type Subjects = InferSubjects<typeof User | typeof Post | typeof Comment> | 'all';  // <-- add more entities
 export type Subjects = InferSubjects<typeof User> | 'all';
-
+export type AppAbility = Ability<[Action, Subjects]>;
 @Injectable()
 export class AbilityFactory {
   defineAbility(user: User) {
     // define rules
-    const { can, cannot, build } = new AbilityBuilder(createMongoAbility);
+    const { can, cannot, build } = new AbilityBuilder(
+      Ability as AbilityClass<AppAbility>,
+    );
 
     if (user.isAdmin) {
       can(Action.Manage, 'all');
-      console.log(user.id);
-
-      cannot(Action.Manage, User, { id: { $ne: user.id } }).because(
+      cannot(Action.Manage, User, { orgId: { $ne: user.orgId } }).because(
         'You can only manage users in your own organization',
       );
     }
     can(Action.Read, 'all');
     cannot(Action.Create, User).because('your special message: only admins!!!');
-    cannot(Action.Delete, User).because('you just cant');
+    cannot(Action.Delete, User, { id: { $ne: user.id } }).because(
+      'you just cant',
+    );
 
     return build({
       detectSubjectType: (item) =>
